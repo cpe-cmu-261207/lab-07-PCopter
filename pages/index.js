@@ -8,13 +8,74 @@ import {
 } from "@tabler/icons";
 
 export default function Home() {
-  const deleteTodo = (idx) => {};
+  const [Todotext, setTodotext] = useState("");
+  const [Todos, setTodos] = useState([]);
+  const onKeyUpHandler = (e) => {
+    if (e.key !== "Enter") return;
+    else {
+      if (Todotext === "") alert("Todo cannot be empty");
+      else {
+        const newTodos = [{ title: Todotext, completed: false }, ...Todos];
+        setTodos(newTodos);
+        setTodotext("");
+      }
+    }
+  };
 
-  const markTodo = (idx) => {};
+  useEffect(() => {
+    const todoStr = localStorage.getItem("react-todos");
+    if (todoStr === null) setTodos([]);
+    else setTodos(JSON.parse(todoStr));
+  }, []);
 
-  const moveUp = (idx) => {};
+  const [isFirstRander, setIsFirstRender] = useState(true);
+  useEffect(() => {
+    if (isFirstRander) {
+      setIsFirstRender(false);
+      return;
+    }
+    saveTodos();
+  }, [Todos]);
 
-  const moveDown = (idx) => {};
+  const saveTodos = () => {
+    const todosStr = JSON.stringify(Todos);
+    localStorage.setItem("react-todos", todosStr);
+  };
+
+  const deleteTodo = (idx) => {
+    Todos.splice(idx, 1);
+    const newtodos = [...Todos];
+    setTodos(newtodos);
+  };
+  const markTodo = (idx) => {
+    Todos[idx].completed = !Todos[idx].completed;
+    setTodos([...Todos]);
+  };
+  const moveUp = (idx) => {
+    if (idx === 0) return;
+    const title = Todos[idx].title;
+    const completed = Todos[idx].completed;
+
+    Todos[idx].title = Todos[idx - 1].title;
+    Todos[idx].completed = Todos[idx - 1].completed;
+
+    Todos[idx - 1].title = title;
+    Todos[idx - 1].completed = completed;
+    setTodos([...Todos]);
+  };
+
+  const moveDown = (idx) => {
+    if (idx === Todos.length - 1) return;
+    const title = Todos[idx].title;
+    const completed = Todos[idx].completed;
+
+    Todos[idx].title = Todos[idx + 1].title;
+    Todos[idx].completed = Todos[idx + 1].completed;
+
+    Todos[idx + 1].title = title;
+    Todos[idx + 1].completed = completed;
+    setTodos([...Todos]);
+  };
 
   return (
     <div>
@@ -28,40 +89,38 @@ export default function Home() {
         <input
           className="form-control mb-1 fs-4"
           placeholder="insert todo here..."
+          onKeyUp={onKeyUpHandler}
+          onChange={(event) => setTodotext(event.target.value)}
+          value={Todotext}
         />
         {/* Todos */}
-        {/* Example 1 */}
-        <div className="border-bottom p-1 py-2 fs-2 d-flex gap-2">
-          <span className="me-auto">Todo</span>
-        </div>
-        {/* Example 2 */}
-        <div className="border-bottom p-1 py-2 fs-2 d-flex gap-2">
-          <span className="me-auto">Todo with buttons</span>
 
-          <button className="btn btn-success">
-            <IconCheck />
-          </button>
-          <button className="btn btn-secondary">
-            <IconArrowUp />
-          </button>
-          <button className="btn btn-secondary">
-            <IconArrowDown />
-          </button>
-          <button className="btn btn-danger">
-            <IconTrash />
-          </button>
-        </div>
+        {Todos.map((todo, i) => (
+          <Todo
+            title={todo.title}
+            completed={todo.completed}
+            key={i}
+            onDelete={() => deleteTodo(i)}
+            onMark={() => markTodo(i)}
+            onMoveUp={() => moveUp(i)}
+            onMoveDown={() => moveDown(i)}
+          />
+        ))}
 
         {/* summary section */}
         <p className="text-center fs-4">
-          <span className="text-primary">All (2) </span>
-          <span className="text-warning">Pending (2) </span>
-          <span className="text-success">Completed (0)</span>
+          <span className="text-primary">All ({Todos.length}) </span>
+          <span className="text-warning">
+            Pending ({Todos.filter((x) => x.completed === false).length})
+          </span>
+          <span className="text-success">
+            Completed ({Todos.filter((x) => x.completed === true).length})
+          </span>
         </p>
 
         {/* Made by section */}
         <p className="text-center mt-3 text-muted fst-italic">
-          made by Chayanin Suatap 12345679
+          made by Phanuwat Wongworrakulkit 640610660
         </p>
       </div>
     </div>
